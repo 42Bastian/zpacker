@@ -1,7 +1,7 @@
 /* -------------------------------------------------------------------
- zpack - simple LZ77-based data compression
- by Zerkman / Sector One
-------------------------------------------------------------------- */
+   zpack - simple LZ77-based data compression
+   by Zerkman / Sector One
+   ------------------------------------------------------------------- */
 
 /* Copyright © 2020 François Galea <fgalea at free.fr>
  * This program is free software. It comes without any warranty, to
@@ -23,15 +23,25 @@ static int count_similar(const unsigned char *p1, const unsigned char *p2,
   }
   return similar;
 }
+#define ENDMARK
 
-#define flush_individual { \
-  *w++ = (individual_count-1) | 0xc0; \
-  memcpy(w, individual, individual_count); \
-  w += individual_count; \
-  individual += individual_count; \
-  individual_count = 0; }
-
-long pack(unsigned char *out, const unsigned char *in, long size) {
+#ifdef ENDMARK
+#define flush_individual {                      \
+    *w++ = (individual_count) | 0xc0;         \
+    memcpy(w, individual, individual_count);    \
+    w += individual_count;                      \
+    individual += individual_count;             \
+    individual_count = 0; }
+#else
+#define flush_individual {                      \
+    *w++ = (individual_count-1) | 0xc0;         \
+    memcpy(w, individual, individual_count);    \
+    w += individual_count;                      \
+    individual += individual_count;             \
+    individual_count = 0; }
+#endif
+long pack(unsigned char *out, const unsigned char *in, long size)
+{
   unsigned char *w = out;
   const unsigned char *r = in;
   const unsigned char *end = in + size;
@@ -69,18 +79,27 @@ long pack(unsigned char *out, const unsigned char *in, long size) {
       /* printf("size=%d offset=%d\n", best_size, offset); */
     } else {
       /* individual bytes */
-      individual_count ++;
+      ++individual_count;
+#ifdef ENDMARK
       if (individual_count == 0x40)
         flush_individual;
-      r ++;
+#else
+      if (individual_count == 0x3f)
+        flush_individual;
+#endif
+      ++r;
     }
   }
   if (individual_count)
     flush_individual;
+#ifdef ENDMARK
+  *w++ = 0xc0;
+#endif
   return w-out;
 }
 
-long unpack(unsigned char *out, const unsigned char *in, long size) {
+long unpack(unsigned char *out, const unsigned char *in, long size)
+{
   unsigned char *w = out;
   const unsigned char *r = in;
   const unsigned char *end = in + size;
@@ -89,6 +108,10 @@ long unpack(unsigned char *out, const unsigned char *in, long size) {
     int size = (unsigned char)(*r++);
     if ((size & 0xc0) == 0xc0) {
       size &= 0x3f;
+#ifdef ENDMARK
+      if ( size == 0 ) break;
+      --size;
+#endif
       while (size-- >= 0)
         *w ++ = *r ++;
     } else {
