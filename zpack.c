@@ -81,10 +81,10 @@ long pack(unsigned char *out, const unsigned char *in, long size)
       /* individual bytes */
       ++individual_count;
 #ifdef ENDMARK
-      if (individual_count == 0x40)
+      if (individual_count == 0x3f)
         flush_individual;
 #else
-      if (individual_count == 0x3f)
+      if (individual_count == 0x40)
         flush_individual;
 #endif
       ++r;
