@@ -16,3 +16,10 @@ The compressed file format is a succession of two types of chunks:
 
  - _Literal chunks_ : Chunks containing not packed data. They consist in one header byte containing the `number of bytes - 1 + 0xc0`, then follows the corresponding number of bytes to be copied directly to the output byte stream. Such chunks contain between 1 and 64 uncompressed bytes.
  - _Offset chunks_ : Chunks describing a repetition of previous data. They consist in one header byte containing the `number of bytes - 4`, then an offset byte. Repetition size may vary between 4 and 195 bytes, and with offset values from -256 to -1.
+
+## Changes from original
+
+- 68k source changed for gcc
+- Change for smaller depacker (optional):
+-- _Literal chunks_ : Size is `number of bytes`
+-- _endmark_ : The value `0xc0` marks the end of packed data.
